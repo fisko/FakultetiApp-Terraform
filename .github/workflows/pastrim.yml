@@ -1,0 +1,81 @@
+name: Pastrimi
+
+# Dy mënyra:
+#  1) "terraform" = terraform destroy për mjedisin e zgjedhur (zgjedhja e sigurt: state dhe burimet pastrohen bashkë)
+#  2) "skaduar"   = fshin grupet rg-tf-* me etiketën skadon të kaluar (scripts/pastro-skaduar.ps1)
+# Fshirja kërkon të shkruani FSHI. Pastrimi javor automatik aktivizohet vetëm nëse variabla AUTO_PASTRIM = true.
+on:
+  workflow_dispatch:
+    inputs:
+      menyra:
+        description: "terraform = destroy; skaduar = fshi grupet e skaduara"
+        type: choice
+        options: [terraform, skaduar]
+        default: terraform
+      mjedisi:
+        description: "Vetëm për terraform: mjedisi (bosh, dev ose prod)"
+        type: choice
+        options: ["", dev, prod]
+        default: ""
+      konfirmo:
+        description: "Shkruani FSHI për të vazhduar"
+        type: string
+        required: true
+  schedule:
+    - cron: "0 3 * * 0" # të dielën në 03:00 UTC
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ARM_USE_OIDC: "true"
+  ARM_USE_AZUREAD: "true"
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_emri: ${{ vars.TF_EMRI }}
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  destroy:
+    if: github.event_name == 'workflow_dispatch' && inputs.menyra == 'terraform' && inputs.konfirmo == 'FSHI'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ vars.TF_DIR || 'hapi-6-state' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.4
+          terraform_wrapper: false
+      - name: Init + Destroy
+        env:
+          MJEDISI: ${{ inputs.mjedisi }}
+        run: |
+          KEY="fakulteti.tfstate"; VARFILE=""
+          if [ -n "$MJEDISI" ]; then KEY="fakulteti-$MJEDISI.tfstate"; VARFILE="-var-file=envs/$MJEDISI.tfvars"; fi
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.STATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.STATE_STORAGE }}" \
+            -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -backend-config="key=$KEY"
+          terraform destroy -input=false -auto-approve $VARFILE
+
+  skaduar:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.menyra == 'skaduar' && inputs.konfirmo == 'FSHI') ||
+      (github.event_name == 'schedule' && vars.AUTO_PASTRIM == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Fshi grupet e skaduara
+        shell: pwsh
+        run: ./scripts/pastro-skaduar.ps1 -Fshi

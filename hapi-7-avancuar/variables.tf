@@ -36,6 +36,28 @@ variable "alert_email" {
   default     = ""
 }
 
+variable "mjedisi" {
+  description = "Mjedisi: bosh (pa mjedis), dev ose prod. Shtohet te emrat e burimeve, p.sh. rg-tf-ardiandev."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = can(regex("^(|dev|prod)$", var.mjedisi))
+    error_message = "mjedisi duhet të jetë bosh, dev ose prod."
+  }
+}
+
+variable "skadon" {
+  description = "Data (YYYY-MM-DD) pas së cilës pastrimi automatik mund ta fshijë grupin. Bosh = nuk skadon."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = can(regex("^(|[0-9]{4}-[0-9]{2}-[0-9]{2})$", var.skadon))
+    error_message = "skadon duhet të jetë bosh ose në formatin YYYY-MM-DD."
+  }
+}
+
 variable "buxheti_usd" {
   description = "Buxheti mujor i grupit në USD (përdoret vetëm kur alert_email është dhënë)"
   type        = number

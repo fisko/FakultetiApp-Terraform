@@ -3,7 +3,7 @@
 # Kosto: 5 GB të dhëna në muaj janë falas; për mësim mbetemi shumë poshtë kësaj.
 
 resource "azurerm_log_analytics_workspace" "law" {
-  name                = "law-tf-${var.emri}-${local.prapashtesa}"
+  name                = "law-tf-${local.emri_plote}-${local.prapashtesa}"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   sku                 = "PerGB2018"
@@ -13,7 +13,7 @@ resource "azurerm_log_analytics_workspace" "law" {
 }
 
 resource "azurerm_application_insights" "ai" {
-  name                = "ai-tf-${var.emri}-${local.prapashtesa}"
+  name                = "ai-tf-${local.emri_plote}-${local.prapashtesa}"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   workspace_id        = azurerm_log_analytics_workspace.law.id
@@ -24,7 +24,7 @@ resource "azurerm_application_insights" "ai" {
 # Alarm i thjeshtë: nëse ka gabime serveri (HTTP 5xx), dërgo email. Vetëm kur jepet alert_email.
 resource "azurerm_monitor_action_group" "email" {
   count               = var.alert_email == "" ? 0 : 1
-  name                = "ag-tf-${var.emri}"
+  name                = "ag-tf-${local.emri_plote}"
   resource_group_name = azurerm_resource_group.rg.name
   short_name          = "tf${substr(var.emri, 0, 8)}"
 
@@ -36,7 +36,7 @@ resource "azurerm_monitor_action_group" "email" {
 
 resource "azurerm_monitor_metric_alert" "http5xx" {
   count               = var.alert_email == "" ? 0 : 1
-  name                = "alarm-5xx-${var.emri}"
+  name                = "alarm-5xx-${local.emri_plote}"
   resource_group_name = azurerm_resource_group.rg.name
   scopes              = [module.webapp.id]
   description         = "Aplikacioni po kthen gabime serveri (5xx)"

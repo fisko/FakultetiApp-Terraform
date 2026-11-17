@@ -25,19 +25,27 @@ resource "random_string" "suffix" {
 locals {
   prapashtesa = random_string.suffix.result
 
+  # Emri i plotë = emri + mjedisi (p.sh. "ardian" + "dev" = "ardiandev"). Pa mjedis mbetet vetëm emri.
+  emri_plote = "${var.emri}${var.mjedisi}"
+
   # Etiketat (tags) vihen në çdo burim; ndihmojnë të dimë kush e ka krijuar dhe pse
-  tags = {
-    projekti = "FakultetiApp"
-    studenti = var.emri
-    krijuar  = "terraform"
-  }
+  tags = merge(
+    {
+      projekti = "FakultetiApp"
+      studenti = var.emri
+      krijuar  = "terraform"
+    },
+    var.mjedisi == "" ? {} : { mjedisi = var.mjedisi },
+    # skadon = data pas së cilës scripts/pastro-skaduar.ps1 e fshin grupin automatikisht
+    var.skadon == "" ? {} : { skadon = var.skadon },
+  )
 }
 
 # ---------------------------------------------------------------------------
 # 3) Resource Group = "folderi" që mban të gjitha burimet
 # ---------------------------------------------------------------------------
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-tf-${var.emri}" # emri në Azure; ${...} fut vlerën e variablës
+  name     = "rg-tf-${local.emri_plote}" # emri në Azure; ${...} fut vlerën e variablës
   location = var.location
   tags     = local.tags
 }
@@ -48,7 +56,7 @@ resource "azurerm_resource_group" "rg" {
 # Kur shkruajmë azurerm_resource_group.rg.name, Terraform kupton vetë që grupi duhet krijuar
 # PARA storage-it. Kjo quhet varësi e nënkuptuar (implicit dependency).
 resource "azurerm_storage_account" "st" {
-  name                            = "st${var.emri}${local.prapashtesa}" # vetëm shkronja të vogla dhe numra, max 24
+  name                            = "st${local.emri_plote}${local.prapashtesa}" # vetëm shkronja të vogla dhe numra, max 24
   resource_group_name             = azurerm_resource_group.rg.name
   location                        = azurerm_resource_group.rg.location
   account_tier                    = "Standard"
@@ -59,7 +67,7 @@ resource "azurerm_storage_account" "st" {
 }
 
 resource "azurerm_storage_container" "dokumentet" {
-  name                  = "dokumentet-${var.emri}"
+  name                  = "dokumentet-${local.emri_plote}"
   storage_account_id    = azurerm_storage_account.st.id
   container_access_type = "private" # askush nuk i hap skedarët pa autorizim
 }
@@ -71,7 +79,7 @@ resource "azurerm_storage_container" "dokumentet" {
 module "webapp" {
   source = "./modules/webapp"
 
-  emri                = var.emri
+  emri                = local.emri_plote
   prapashtesa         = local.prapashtesa
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location

@@ -41,7 +41,7 @@ resource "azurerm_management_lock" "rg" {
 #    Aktivizohet vetëm kur jepet alert_email. Kufiri është në USD.
 resource "azurerm_consumption_budget_resource_group" "buxheti" {
   count             = var.alert_email == "" ? 0 : 1
-  name              = "buxhet-${var.emri}"
+  name              = "buxhet-${local.emri_plote}"
   resource_group_id = azurerm_resource_group.rg.id
 
   amount     = var.buxheti_usd

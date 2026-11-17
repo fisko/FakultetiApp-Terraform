@@ -32,6 +32,25 @@ run "emrat_dhe_etiketat" {
   }
 }
 
+run "mjedisi_dev_ndryshon_emrat" {
+  command = plan
+
+  variables {
+    mjedisi = "dev"
+    skadon  = "2030-01-01"
+  }
+
+  assert {
+    condition     = azurerm_resource_group.rg.name == "rg-tf-testdev"
+    error_message = "Me mjedisi=dev grupi duhet të quhet rg-tf-<emri>dev."
+  }
+
+  assert {
+    condition     = azurerm_resource_group.rg.tags["skadon"] == "2030-01-01" && azurerm_resource_group.rg.tags["mjedisi"] == "dev"
+    error_message = "Etiketat mjedisi dhe skadon duhet të vihen."
+  }
+}
+
 run "baza_eshte_falas" {
   command = plan
 
