@@ -18,20 +18,163 @@ Nëse keni aplikuar `hapi-6` më parë, bëni `init` këtu me të njëjtat vlera
 
 ## 11.1 Modulet (ripërdorimi)
 
-**Modul** = folder me skedarë `.tf` që sillet si funksion: ka hyrje (`variables.tf`), logjikë (`main.tf`) dhe dalje (`outputs.tf`).
+### Çfarë është një modul?
 
-Në `main.tf`:
+**Modul** = një folder me skedarë `.tf` që sillet si **funksion** në programim: merr parametra, bën një punë dhe kthen rezultate.
+
+| Në programim (C#) | Në Terraform |
+|---|---|
+| Parametrat e funksionit | `variables.tf` (hyrjet) |
+| Trupi i funksionit | `main.tf` (burimet brenda modulit) |
+| Vlera e kthyer (`return`) | `outputs.tf` (daljet) |
+| Thirrja `WebApp("ardian", ...)` | blloku `module "webapp" { ... }` |
+
+Në fakt **çdo** projekt Terraform është modul: dosja ku ekzekutoni `terraform apply` quhet *root module* (moduli rrënjë). Ajo që ndërtojmë këtu është një *child module* (modul fëmijë) që thirret nga rrënja.
+
+### Pse na duhen?
+
+1. **Pa përsëritje (DRY).** Plan + Web App + Managed Identity janë 2 burime me 15 rreshta. Pa modul, për 3 aplikacione i kopjojmë 3 herë; me modul i shkruajmë një herë dhe e thërrasim 3 herë.
+2. **Një vend për rregullat.** Cilësimet e sigurisë (`https_only`, `ftps_state = "Disabled"`, TLS, HTTP/2) rrinë brenda modulit. Kushdo që e përdor i merr automatikisht; nuk harrohet.
+3. **Fsheh kompleksitetin.** Kush e thërret nuk duhet të dijë si krijohet një Linux Web App me identitet; i jep vetëm emrin dhe rajonin.
+4. **Teste dhe ndryshime më të sigurta.** Ndryshimi bëhet në një vend.
+5. **Ripërdorim mes projekteve.** Moduli mund të jetë në repo tjetër ose në Terraform Registry (`source = "Azure/..."`).
+
+### Struktura e modulit tonë
+
+```text
+hapi-7-avancuar/
+├─ main.tf              ← moduli rrënjë: e thërret modulin
+└─ modules/
+   └─ webapp/           ← moduli fëmijë
+      ├─ variables.tf   ← HYRJET   (emri, rajoni, plan_sku, app_settings...)
+      ├─ main.tf        ← LOGJIKA  (azurerm_service_plan + azurerm_linux_web_app)
+      └─ outputs.tf     ← DALJET   (id, name, default_hostname, principal_id)
+```
+
+### 1) Hyrjet (`modules/webapp/variables.tf`)
+
 ```hcl
-module "webapp" {
-  source              = "./modules/webapp"
-  emri                = var.emri
-  resource_group_name = azurerm_resource_group.rg.name
+variable "emri" {            # e detyrueshme (s'ka default)
+  type = string
+}
+variable "plan_sku" {        # opsionale (ka default)
+  type    = string
+  default = "F1"
+}
+variable "app_settings" {
+  type    = map(string)
+  default = {}
+}
+```
+Variablat pa `default` janë **të detyrueshme**: Terraform ankohet nëse nuk i jepni. Ato me `default` janë opsionale.
+
+### 2) Logjika (`modules/webapp/main.tf`)
+
+```hcl
+resource "azurerm_service_plan" "plan" {
+  name     = "plan-tf-${var.emri}"      # var.* = hyrja e modulit
+  sku_name = var.plan_sku
+  ...
+}
+resource "azurerm_linux_web_app" "app" {
+  service_plan_id = azurerm_service_plan.plan.id   # varësi brenda modulit
+  app_settings    = var.app_settings               # vijnë nga jashtë
   ...
 }
 ```
-- Referojmë daljet e modulit: `module.webapp.principal_id`.
-- Pse? Nëse duhen 3 aplikacione, thërrasim modulin 3 herë; kodi shkruhet një herë.
-- Blloku `moved { from = ... to = module.webapp... }` tregon se burimi ndryshoi vend, jo që duhet të fshihet.
+Kujdes: moduli **nuk sheh** asgjë nga jashtë vetvetes. Nuk mund të përdorë `azurerm_resource_group.rg` të rrënjës; çdo gjë që i duhet duhet t'i kalohet si hyrje. Kjo e bën të pavarur dhe të testueshëm. Pikërisht ndaj moduli nuk di asgjë për Key Vault ose SQL: referencat e sekreteve i kalon rrënja përmes `app_settings`.
+
+### 3) Daljet (`modules/webapp/outputs.tf`)
+
+```hcl
+output "principal_id" {
+  value = azurerm_linux_web_app.app.identity[0].principal_id
+}
+```
+Burimet brenda modulit janë **private**. Rrënja sheh vetëm ato që moduli i publikon me `output`. Këtu publikojmë `principal_id` (identiteti i aplikacionit) sepse rrënja i duhet për t'i dhënë rolin *Key Vault Secrets User*.
+
+### 4) Thirrja (`main.tf` i rrënjës)
+
+```hcl
+module "webapp" {
+  source = "./modules/webapp"              # ku ndodhet moduli
+
+  emri                = local.emri_plote   # ← hyrje
+  prapashtesa         = local.prapashtesa
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  plan_sku            = var.plan_sku
+  tags                = local.tags
+
+  app_settings = {
+    "Blob__Container" = azurerm_storage_container.dokumentet.name
+  }
+}
+
+# përdorim të daljes së modulit:
+resource "azurerm_role_assignment" "app_kv" {
+  principal_id = module.webapp.principal_id   # module.<emri>.<dalja>
+  ...
+}
+```
+Rregulli i leximit: **hyrja** hyn me `emri = ...`, **dalja** del me `module.webapp.<dalja>`.
+
+### Si duket në `plan` dhe në state
+
+Burimet e modulit marrin prefiks:
+
+```text
+module.webapp.azurerm_service_plan.plan
+module.webapp.azurerm_linux_web_app.app
+```
+Provojeni: `terraform state list | Select-String module`.
+
+### Blloku `moved`: refaktorim pa humbje
+
+Në hapin 6 burimet quheshin `azurerm_linux_web_app.app` (pa modul). Nëse thjesht i vendosim në modul, Terraform do t'i shihte si **burime të reja** dhe do **fshinte të vjetrat dhe do krijonte të reja** (aplikacion i humbur!). Blloku
+
+```hcl
+moved {
+  from = azurerm_linux_web_app.app
+  to   = module.webapp.azurerm_linux_web_app.app
+}
+```
+i thotë Terraform-it: "është i njëjti burim, ka ndryshuar vetëm adresa në state". Rezultati: `plan` tregon "has moved", jo shkatërrim.
+
+### Thirrja e shumëfishtë
+
+Fuqia e vërtetë e modulit: një modul, shumë instanca.
+
+```hcl
+module "webapp_demo" {
+  source              = "./modules/webapp"
+  emri                = "${local.emri_plote}demo"
+  prapashtesa         = local.prapashtesa
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+}
+
+# ose me for_each, një për student:
+module "webapp" {
+  for_each            = toset(["ardian", "arjeta", "clirim"])
+  source              = "./modules/webapp"
+  emri                = each.key
+  ...
+}
+# adresa: module.webapp["ardian"].principal_id
+```
+
+### Gabimet e zakonshme
+
+| Gabimi | Shkaku |
+|---|---|
+| `Missing required argument` te `module` | Harruat një hyrje pa `default` |
+| `Unsupported argument` te `module` | Hyrja nuk është deklaruar te `variables.tf` e modulit |
+| `Unsupported attribute ... module.webapp.xxx` | Moduli s'e ka `output "xxx"`: shtojeni te `outputs.tf` |
+| Pas ndryshimit të `source` s'gjen modulin | Ekzekutoni `terraform init` (e ri-shkarkon/regjistron modulet) |
+| `plan` do të fshijë dhe riktijojë pas refaktorimit | Mungon blloku `moved` |
+
+> Rregull praktik: **mos e bëni modul të parakohshëm**. Nëse një grup burimesh e përdorni një herë, mbajeni të thjeshtë. Bëjeni modul kur e përsërisni, ose kur dëshironi të mbyllni rregulla (siguri, emërtim) në një vend.
 
 **Ushtrim:** thirrni modulin dy herë (`module "webapp_demo"` me `plan_sku = "F1"` dhe emër tjetër). Çfarë shfaq `terraform plan`?
 (Kujdes: shumë F1 në një rajon mund të kalojnë kuotën; pastaj bëni `destroy`.)
