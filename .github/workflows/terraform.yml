@@ -12,6 +12,12 @@ on:
     branches: [main]
     paths: ["hapi-6-state/**", "hapi-7-avancuar/**"]
   workflow_dispatch:
+    inputs:
+      mjedisi:
+        description: "Mjedisi (dev ose prod). Bosh = përdor variablën TF_ENV, ose pa mjedis."
+        type: choice
+        options: ["", dev, prod]
+        default: ""
 
 permissions:
   id-token: write       # për OIDC (hyrje pa fjalëkalim)
@@ -28,6 +34,8 @@ env:
   TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   TF_VAR_emri: ${{ vars.TF_EMRI }}
   TF_IN_AUTOMATION: "true"
+  # Mjedisi: nga hyrja e ekzekutimit manual, ose nga variabla TF_ENV (dev/prod). Bosh = pa mjedis (sjellja e vjetër).
+  TF_ENV: ${{ inputs.mjedisi || vars.TF_ENV }}
 
 jobs:
   terraform:
@@ -57,10 +65,14 @@ jobs:
 
       - name: Init
         run: |
+          # secili mjedis ka state të vetin (çelës tjetër në të njëjtin container)
+          KEY="fakulteti.tfstate"
+          if [ -n "$TF_ENV" ]; then KEY="fakulteti-$TF_ENV.tfstate"; fi
           terraform init \
             -backend-config="resource_group_name=${{ vars.STATE_RG }}" \
             -backend-config="storage_account_name=${{ vars.STATE_STORAGE }}" \
-            -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -backend-config="key=$KEY"
 
       - name: Validate
         run: terraform validate
@@ -74,7 +86,9 @@ jobs:
         id: plan
         run: |
           set -o pipefail
-          terraform plan -input=false -no-color -out=tfplan | tee plan.txt
+          VARFILE=""
+          if [ -n "$TF_ENV" ]; then VARFILE="-var-file=envs/$TF_ENV.tfvars"; fi
+          terraform plan -input=false -no-color $VARFILE -out=tfplan | tee plan.txt
 
       # Në pull request: plan-i shfaqet si koment, që të shihet para merge
       - name: Komento plan-in në PR

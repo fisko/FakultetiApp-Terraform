@@ -12,7 +12,7 @@ resource "random_password" "sql" {
 
 # SQL Server = "kontejneri" logjik; bazat e të dhënave jetojnë brenda tij
 resource "azurerm_mssql_server" "sql" {
-  name                         = "sql-tf-${var.emri}-${local.prapashtesa}"
+  name                         = "sql-tf-${local.emri_plote}-${local.prapashtesa}"
   resource_group_name          = azurerm_resource_group.rg.name
   location                     = azurerm_resource_group.rg.location
   version                      = "12.0" # kështu quhet versioni aktual i Azure SQL
@@ -27,7 +27,7 @@ resource "azurerm_mssql_server" "sql" {
 # që flet drejtpërdrejt me API-n e Azure (Resource Manager) me çdo veti që ofron.
 resource "azapi_resource" "db" {
   type      = "Microsoft.Sql/servers/databases@2023-08-01-preview" # lloji + versioni i API-t
-  name      = "db-${var.emri}"
+  name      = "db-${local.emri_plote}"
   parent_id = azurerm_mssql_server.sql.id # baza është "fëmijë" i serverit
   location  = azurerm_resource_group.rg.location
   tags      = local.tags
