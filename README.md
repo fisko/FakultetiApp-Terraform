@@ -22,6 +22,7 @@ në **subscription-in tuaj**. Të njëjtën infrastrukturë (Web App, SQL falas,
 | 9 | [Pastrimi dhe problemet](docs/09-pastrimi-dhe-probleme.md) | `destroy`, kostot, gabimet e zakonshme | referencë |
 | 10 | [Fjalori](docs/10-fjalori.md) | Termat shqip/anglisht | referencë |
 | 11 | [Hapi 7: të avancuarit](docs/11-hapi-7-avancuar.md) | Modul, Application Insights, lock/buxhet, `terraform test`, Checkov, plan në PR, drift | 60 min |
+| 12 | [Mjedise, ekipe, pastrim](docs/12-mjedise-ekipe-pastrim.md) | `dev`/`prod` me tfvars, Terraform Cloud vs OIDC, pastrim automatik | 30 min |
 | — | [Për profesorin](docs/per-profesorin.md) | Agjenda e orës dhe këshilla | |
 
 ## Çfarë do të ndërtojmë

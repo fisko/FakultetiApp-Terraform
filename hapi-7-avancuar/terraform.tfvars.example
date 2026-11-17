@@ -3,5 +3,7 @@ emri            = "emri"
 
 # Opsionale (hiqni # për t'i aktivizuar):
 # alert_email      = "emaili.juaj@example.com"   # aktivizon alarmin 5xx dhe buxhetin
+# mjedisi          = "dev"                       # dev ose prod (shtohet në emra)
+# skadon           = "2026-12-31"                # data e pastrimit automatik (YYYY-MM-DD)
 # buxheti_usd      = 5
 # mbro_nga_fshirja = true                        # lock kundër fshirjes aksidentale
