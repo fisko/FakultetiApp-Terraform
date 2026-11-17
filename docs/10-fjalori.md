@@ -40,3 +40,9 @@
 | **Mock provider** | Provider i rremë për `terraform test` pa Azure |
 | **Checkov** | Mjet që skanon kodin Terraform për probleme sigurie |
 | **Application Insights** | Shërbim monitorimi i aplikacionit |
+| **Mjedis (environment)** | Kopje e infrastrukturës për një qëllim: `dev` (provë) ose `prod` (real) |
+| **`tfvars`** | Skedar me vlera të variablave për një mjedis (`-var-file`) |
+| **Workspace** | Njësi e state-it në Terraform Cloud; zakonisht një për mjedis |
+| **Terraform Cloud (HCP)** | Shërbim i HashiCorp që ekzekuton plan/apply dhe ruan state |
+| **GitHub Environment** | Cilësim në GitHub që kërkon miratim para se një workflow të prekë `prod` |
+| **`skadon`** | Tag me datën pas së cilës burimi pastrohet automatikisht |

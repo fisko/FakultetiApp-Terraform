@@ -74,6 +74,10 @@ c) *Provoni gabim:* shkruani qëllimisht kod të pavlefshëm → hapi **Validate
 - `.terraform.lock.hcl` duhet të jetë në repo (ekzekutoni `terraform init` në `hapi-6-state` dhe bëni commit).
 - **Rrezik realist**: kushdo që bashkon në `main` ndryshon Azure. Në ekip shtohen: *branch protection* (PR i detyrueshëm), *Environment* me miratim manual për `apply`, dhe leje më të ngushta se Owner.
 
+- **Mjedise:** variabla `TF_ENV` (ose zgjedhja `mjedisi` në nisje manuale) zgjedh `key` të state dhe `envs/<mjedisi>.tfvars`. Shih [dokumentin 12](12-mjedise-ekipe-pastrim.md).
+- **Pastrim:** workflow-i `pastrim.yml` bën destroy me konfirmim `FSHI`.
+- Provuar realisht: PR me koment plani + Checkov, apply në `main` dhe destroy me OIDC.
+
 ## 7.4 Nëse dështon
 
 | Gabimi | Shkaku | Zgjidhja |

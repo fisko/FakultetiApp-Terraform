@@ -51,4 +51,10 @@ Nëse koha ngushtë: Hapat 3-5 mund të bëhen direkt me `hapi-5-sql`, dhe GitHu
 Hapi 5 u zbatua me sukses në një subscription test: 17 burime, baza SQL me `useFreeLimit = true`, Key Vault me sekrete, Web App me Managed Identity. Gjithë infrastruktura u fshi pas testit.
 
 ## Hapi 7 (opsional, orë shtesë)
-Shih [dokumentin 11](11-hapi-7-avancuar.md). Verifikuar me apply/destroy të vërtetë: modul, state në Azure, lock, alarm, buxhet, 6 teste. **Jo të verifikuara:** deploy i aplikacionit (kuota F1 në subscription-in tim) dhe apply real i cilësimeve të fundit (ftps, TLS). Para klasës bëni një provë të plotë.
+Shih [dokumentin 11](11-hapi-7-avancuar.md). Verifikuar me apply/destroy të vërtetë: modul, state në Azure, lock, alarm, buxhet, 6 teste. Apply real i cilësimeve të fundit (FTPS Disabled, TLS 1.2, HTTP/2) u verifikua me `az webapp show`. **Jo e verifikuar:** deploy i aplikacionit (kuota F1 në subscription-in tim). Para klasës bëni një provë të plotë.
+
+## Mjedise, ekipe, pastrim (orë shtesë)
+Shih [dokumentin 12](12-mjedise-ekipe-pastrim.md) dhe detyrat 22-28.
+- Verifikuar realisht: PR me plan + Checkov, apply në `main` me OIDC dhe state në Azure, `oidc-github.ps1`, `krijo-state.ps1`, `pastrim.yml` (destroy).
+- Vetëm provë (dry-run): `pastro-skaduar.ps1` / mënyra `skaduar`.
+- Theksoni: state i ndarë për çdo mjedis; `prod` me miratim; `AUTO_PASTRIM` fshin vërtet, ndaj aktivizojeni vetëm me qëllim.

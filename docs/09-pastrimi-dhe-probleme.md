@@ -13,6 +13,12 @@ az group delete -n rg-tfstate-EMRI --yes --no-wait
 Kontroll final: Portal → *Resource groups* → s'duhet të ketë `rg-tf-*` ose `rg-tfstate-*`.
 Nëse `terraform destroy` dështon në mes, ekzekutojeni sërish; ose fshini me dorë `az group delete -n rg-tf-EMRI --yes`.
 
+### Pastrim automatik
+- **Me Actions:** workflow-i *Pastrim* → `menyra=terraform` (destroy, shkruani `FSHI`) ose `menyra=skaduar`.
+- **Me tag `skadon`:** `./scripts/pastro-skaduar.ps1` (provë) dhe `-Fshi` (fshin vërtet) heq grupet `rg-tf-*` me datë të kaluar.
+- **Çdo javë:** vendosni variablën e repo-s `AUTO_PASTRIM=true`.
+- Detaje: [dokumenti 12](12-mjedise-ekipe-pastrim.md).
+
 ## 9.2 Kostot
 
 | Burimi | Kosto |
@@ -42,6 +48,7 @@ Nëse `terraform destroy` dështon në mes, ekzekutojeni sërish; ose fshini me 
 | `Error acquiring the state lock` | Dikush/diçka tjetër po bën apply, ose një komandë u ndërpre (Ctrl+C) dhe lock-u mbeti | Prisni; nëse ka mbetur ngecur: `terraform force-unlock <ID>` (ID-ja shfaqet në gabim). Vetëm kur jeni të sigurt që asgjë tjetër nuk po punon |
 | `ScopeLocked` gjatë `delete`/`destroy` | Grupi ka lock `CanNotDelete` | Çaktivizoni `mbro_nga_fshirja`, `apply`, pastaj fshini; ose `az lock delete --name mos-fshij -g <grupi>` |
 | Buxheti ekziston por grupi u fshi me dorë (`already exists ... budgets`) | Buxheti jeton veçmas nga grupi | `az consumption budget delete --budget-name buxhet-<emri> --resource-group <grupi>` |
+| `terraform destroy` i mjedisit të gabuar | State i përzier mes `dev`/`prod` | Kontrolloni `key=` në `init` dhe `-var-file`; përdorni `-reconfigure` kur ndërroni mjedis |
 | `Backend configuration changed` | Ndryshuat backend | `terraform init -reconfigure` ose `-migrate-state` |
 | `Provider produced inconsistent result` | Gabim kalimtar i Azure | Ekzekutoni `apply` sërish |
 | Faqja jep 403 "Site Disabled" | Kuota F1 mbaroi | Prisni deri nesër |

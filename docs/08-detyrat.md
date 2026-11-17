@@ -50,6 +50,16 @@ Bëjini në **hapi-6-state** (ose në kopje të hapi-5 për ato lokale). Çdo de
 20. **Checkov.** Rregulloni 2 gjetje dhe provoni që `checkov` raporton më pak.
 21. **Lock.** Aktivizoni `mbro_nga_fshirja`, provoni `az group delete`, pastaj `terraform destroy`.
 
+## Niveli 5 — Mjedise, ekip, pastrim (shih [dokumentin 12](12-mjedise-ekipe-pastrim.md))
+
+22. **Dy mjedise.** Në `hapi-7-avancuar` bëni `apply -var-file=envs/dev.tfvars` me state `key=fakulteti-dev.tfstate`. Shihni emrat me `dev` te Portal.
+23. **State të ndara.** Bëni `init -reconfigure` me `key=fakulteti-prod.tfstate` dhe krahasoni `terraform state list`. Pse s'duhet të ndahet state mes mjediseve?
+24. **Actions me mjedis.** Vendosni variablën e repo-s `TF_ENV=dev` ose nisni workflow-n me dorë duke zgjedhur `mjedisi`.
+25. **Miratim për prod.** Krijoni GitHub Environment `prod` me *Required reviewers* dhe provoni një apply.
+26. **Pastrim me skadencë.** Vendosni `skadon` për nesër, ekzekutoni `scripts/pastro-skaduar.ps1` (provë) dhe shpjegoni çfarë do të fshinte me `-Fshi`.
+27. **Pastrim me Actions.** Nisni workflow-n *Pastrim* me `menyra=terraform` dhe `konfirmo=FSHI`.
+28. **Krahasim.** Shkruani 5 rreshta: kur do zgjidhnit Terraform Cloud dhe kur backend-in `azurerm` me OIDC?
+
 ## Pyetje teorike
 
 1. Cili është ndryshimi mes `resource` dhe `data`?
@@ -59,6 +69,8 @@ Bëjini në **hapi-6-state** (ose në kopje të hapi-5 për ato lokale). Çdo de
 5. Pse përdorim OIDC dhe jo fjalëkalim/çelës në GitHub Secrets?
 6. Çfarë është `depends_on` dhe kur duhet?
 7. Çfarë ndodh nëse ndryshoni emrin lokal të një burimi në kod (`rg` → `grupi`)?
+8. Pse `dev` dhe `prod` kanë state të ndarë?
+9. Pse tag-u `skadon` ndihmon kundër kostove të harruara?
 
 ## Pas detyrave
 Gjithmonë: `terraform destroy` (ose lini vetëm çfarë ju duhet). Shih [9. Pastrimi](09-pastrimi-dhe-probleme.md).
