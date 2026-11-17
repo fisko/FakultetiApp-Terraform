@@ -1,0 +1,60 @@
+name: Terraform
+
+# plan  -> kur hapet një pull request (tregon çfarë do të ndryshonte)
+# apply -> kur bashkohet (merge) në main (ndryshon me të vërtetë Azure)
+on:
+  pull_request:
+    paths: ["hapi-6-state/**"]
+  push:
+    branches: [main]
+    paths: ["hapi-6-state/**"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write       # për OIDC (hyrje pa fjalëkalim)
+  contents: read
+  pull-requests: write  # për komentin me plan-in
+
+env:
+  # Terraform lexon automatikisht variablat ARM_* (azurerm) dhe TF_VAR_* (variablat tona)
+  ARM_USE_OIDC: "true"
+  ARM_USE_AZUREAD: "true"
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_emri: ${{ vars.TF_EMRI }}
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hapi-6-state
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.4
+
+      - name: Format
+        run: terraform fmt -check
+
+      - name: Init
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.STATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.STATE_STORAGE }}" \
+            -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Apply (vetëm në main)
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: terraform apply -input=false -auto-approve tfplan

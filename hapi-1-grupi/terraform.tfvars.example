@@ -1,0 +1,4 @@
+# Kopjojeni këtë skedar si "terraform.tfvars" dhe plotësoni vlerat tuaja.
+# (terraform.tfvars është në .gitignore, nuk ngarkohet në GitHub)
+subscription_id = "00000000-0000-0000-0000-000000000000"
+emri            = "emri"

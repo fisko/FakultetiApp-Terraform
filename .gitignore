@@ -1,0 +1,11 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfplan
+tfplan
+# vlerat tuaja personale (nuk ngarkohen në GitHub)
+terraform.tfvars
+*.auto.tfvars
+# .terraform.lock.hcl DUHET ngarkuar (fikson versionet e provider-ave)
