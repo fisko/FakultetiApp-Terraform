@@ -58,6 +58,14 @@ Provoni: dosja lokale **nuk ka** `terraform.tfstate`.
 
 **Migrimi nga state lokal:** nëse kishit infrastrukturë me state lokal (hapi-5), kur bëni `init` në projekt me backend, Terraform pyet *"Do you want to copy existing state?"* → `yes`. Në klasë më e thjeshtë: `terraform destroy` në hapi-5, pastaj hapi-6 nga e para.
 
+**Komanda të dobishme për state në Azure:**
+```powershell
+terraform state list              # burimet që ndiqen
+terraform state show <burimi>     # detajet e një burimi
+terraform state pull > kopje.json # kopje e state-it (mos e bëni commit!)
+```
+`krijo-state.ps1` e krijon Storage-in me autentikim Entra ID (pa çelës). Opsionalisht aktivizoni *blob versioning* te Storage që të riktheni state të vjetër.
+
 ## 6.4 Ku janë sekretet? (Rrezik i ndershëm)
 
 | Vend | Çfarë ka | Mbrojtja |

@@ -8,7 +8,7 @@ Qëllimi: infrastruktura ndryshohet **vetëm nëpërmjet Git**.
                        Merge në main  ──►  Actions: APPLY                  (ndryshon Azure)
 ```
 
-Workflow-i: `.github/workflows/terraform.yml`. Punon mbi `hapi-6-state/`.
+Workflow-i: `.github/workflows/terraform.yml`. Punon mbi `hapi-6-state/`, ose mbi `hapi-7-avancuar/` nëse vendosni variablën GitHub `TF_DIR` (shih [dokumentin 11](11-hapi-7-avancuar.md)). Shton edhe Checkov dhe komentin me plan-in në PR.
 
 ## 7.1 Si hyn GitHub në Azure-in tuaj: OIDC (pa fjalëkalim)
 

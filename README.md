@@ -19,6 +19,7 @@ në **subscription-in tuaj**. Të njëjtën infrastrukturë (Web App, SQL falas,
 | 8 | [Detyrat](docs/08-detyrat.md) | Ushtrime për secilin | në shtëpi |
 | 9 | [Pastrimi dhe problemet](docs/09-pastrimi-dhe-probleme.md) | `destroy`, kostot, gabimet e zakonshme | referencë |
 | 10 | [Fjalori](docs/10-fjalori.md) | Termat shqip/anglisht | referencë |
+| 11 | [Hapi 7: të avancuarit](docs/11-hapi-7-avancuar.md) | Modul, Application Insights, lock/buxhet, `terraform test`, Checkov, plan në PR, drift | 60 min |
 | — | [Për profesorin](docs/per-profesorin.md) | Agjenda e orës dhe këshilla | |
 
 ## Çfarë do të ndërtojmë
@@ -42,6 +43,7 @@ hapi-3-webapp/     + App Service Plan dhe Web App
 hapi-4-keyvault/   + Key Vault, role, sekrete
 hapi-5-sql/        + SQL Server dhe bazë falas   (infrastruktura e plotë)
 hapi-6-state/      hapi-5 + state në Azure (përdoret nga GitHub Actions)
+hapi-7-avancuar/   hapi-6 + modul, Application Insights, lock/buxhet, teste
 scripts/           krijo-state.ps1, oidc-github.ps1
 .github/workflows/ terraform.yml
 docs/              udhëzuesit

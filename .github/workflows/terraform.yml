@@ -1,13 +1,16 @@
 name: Terraform
 
-# plan  -> kur hapet një pull request (tregon çfarë do të ndryshonte)
+# plan  -> kur hapet një pull request (tregon çfarë do të ndryshonte, si koment në PR)
 # apply -> kur bashkohet (merge) në main (ndryshon me të vërtetë Azure)
+#
+# Dosja që përdoret: variabla e GitHub "TF_DIR" (Settings > Secrets and variables > Actions > Variables).
+# Pa të, përdoret hapi-6-state. Për hapin e avancuar vendosni TF_DIR = hapi-7-avancuar.
 on:
   pull_request:
-    paths: ["hapi-6-state/**"]
+    paths: ["hapi-6-state/**", "hapi-7-avancuar/**"]
   push:
     branches: [main]
-    paths: ["hapi-6-state/**"]
+    paths: ["hapi-6-state/**", "hapi-7-avancuar/**"]
   workflow_dispatch:
 
 permissions:
@@ -31,16 +34,26 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: hapi-6-state
+        working-directory: ${{ vars.TF_DIR || 'hapi-6-state' }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.14.4
+          terraform_wrapper: false
 
       - name: Format
-        run: terraform fmt -check
+        run: terraform fmt -check -recursive
+
+      # Kontroll sigurie i kodit (Checkov). soft_fail = tregon gjetjet por nuk e ndalon punën.
+      - name: Checkov (siguria e kodit)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: ${{ vars.TF_DIR || 'hapi-6-state' }}
+          framework: terraform
+          soft_fail: true
+          quiet: true
 
       - name: Init
         run: |
@@ -52,8 +65,33 @@ jobs:
       - name: Validate
         run: terraform validate
 
+      # Testet (terraform test) ekzistojnë vetëm te hapi-7-avancuar; punojnë pa Azure
+      - name: Test
+        run: |
+          if [ -d tests ]; then terraform test; else echo "Nuk ka teste në këtë dosje"; fi
+
       - name: Plan
-        run: terraform plan -input=false -out=tfplan
+        id: plan
+        run: |
+          set -o pipefail
+          terraform plan -input=false -no-color -out=tfplan | tee plan.txt
+
+      # Në pull request: plan-i shfaqet si koment, që të shihet para merge
+      - name: Komento plan-in në PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const dir = '${{ vars.TF_DIR || 'hapi-6-state' }}';
+            let plan = fs.existsSync(`${dir}/plan.txt`) ? fs.readFileSync(`${dir}/plan.txt`, 'utf8') : '(nuk u krijua plan)';
+            if (plan.length > 60000) plan = plan.slice(-60000);
+            const status = '${{ steps.plan.outcome }}' === 'success' ? 'u krijua' : 'DËSHTOI';
+            const body = `### Terraform plan (${status})\n<details><summary>Shfaq plan-in</summary>\n\n\`\`\`\n${plan}\n\`\`\`\n</details>`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, body
+            });
 
       - name: Apply (vetëm në main)
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

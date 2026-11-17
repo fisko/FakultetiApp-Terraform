@@ -33,3 +33,10 @@
 | **Federated credential** | Rregulli në Azure: "beso këtë repo/branch" |
 | **CI/CD** | Ndërtim dhe zbatim automatik pas çdo ndryshimi në Git |
 | **Free offer (SQL)** | Baza falas e Azure SQL me kufi mujor |
+| **Modul** | Folder `.tf` i ripërdorshëm me hyrje, logjikë dhe dalje |
+| **Drift** | Azure ndryshoi jashtë Terraform; kodi dhe realiteti nuk përputhen |
+| **Import** | Sjellja e një burimi ekzistues nën menaxhimin e Terraform |
+| **Lock** | Mbrojtje e Azure që bllokon fshirjen e burimit |
+| **Mock provider** | Provider i rremë për `terraform test` pa Azure |
+| **Checkov** | Mjet që skanon kodin Terraform për probleme sigurie |
+| **Application Insights** | Shërbim monitorimi i aplikacionit |

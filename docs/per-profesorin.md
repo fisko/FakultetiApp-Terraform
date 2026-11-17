@@ -49,3 +49,6 @@ Nëse koha ngushtë: Hapat 3-5 mund të bëhen direkt me `hapi-5-sql`, dhe GitHu
 ## Verifikuar para klasës
 
 Hapi 5 u zbatua me sukses në një subscription test: 17 burime, baza SQL me `useFreeLimit = true`, Key Vault me sekrete, Web App me Managed Identity. Gjithë infrastruktura u fshi pas testit.
+
+## Hapi 7 (opsional, orë shtesë)
+Shih [dokumentin 11](11-hapi-7-avancuar.md). Verifikuar me apply/destroy të vërtetë: modul, state në Azure, lock, alarm, buxhet, 6 teste. **Jo të verifikuara:** deploy i aplikacionit (kuota F1 në subscription-in tim) dhe apply real i cilësimeve të fundit (ftps, TLS). Para klasës bëni një provë të plotë.

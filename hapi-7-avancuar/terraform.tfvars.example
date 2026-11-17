@@ -1,0 +1,7 @@
+subscription_id = "00000000-0000-0000-0000-000000000000"
+emri            = "emri"
+
+# Opsionale (hiqni # për t'i aktivizuar):
+# alert_email      = "emaili.juaj@example.com"   # aktivizon alarmin 5xx dhe buxhetin
+# buxheti_usd      = 5
+# mbro_nga_fshirja = true                        # lock kundër fshirjes aksidentale

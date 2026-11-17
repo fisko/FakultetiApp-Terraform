@@ -39,7 +39,9 @@ Nëse `terraform destroy` dështon në mes, ekzekutojeni sërish; ose fshini me 
 | `Unauthorized`/`403` te Key Vault secret | Rolet s'janë përhapur | Prisni 2 min dhe `terraform apply` sërish |
 | `Quota ... F1` / `Free VMs: 0` | S'keni kuotë F1 në atë rajon | Provoni rajon tjetër; ose `plan_sku = "B1"` (kushton) |
 | `SqlServerRegionDoesNotAllowProvisioning` | Rajon pa kapacitet SQL për subscription të ri | Ndryshoni `location` (p.sh. `northeurope`, `uksouth`) |
-| `Error acquiring the state lock` | Dikush/diçka tjetër po bën apply | Prisni; nëse ka mbetur ngecur: `terraform force-unlock <ID>` |
+| `Error acquiring the state lock` | Dikush/diçka tjetër po bën apply, ose një komandë u ndërpre (Ctrl+C) dhe lock-u mbeti | Prisni; nëse ka mbetur ngecur: `terraform force-unlock <ID>` (ID-ja shfaqet në gabim). Vetëm kur jeni të sigurt që asgjë tjetër nuk po punon |
+| `ScopeLocked` gjatë `delete`/`destroy` | Grupi ka lock `CanNotDelete` | Çaktivizoni `mbro_nga_fshirja`, `apply`, pastaj fshini; ose `az lock delete --name mos-fshij -g <grupi>` |
+| Buxheti ekziston por grupi u fshi me dorë (`already exists ... budgets`) | Buxheti jeton veçmas nga grupi | `az consumption budget delete --budget-name buxhet-<emri> --resource-group <grupi>` |
 | `Backend configuration changed` | Ndryshuat backend | `terraform init -reconfigure` ose `-migrate-state` |
 | `Provider produced inconsistent result` | Gabim kalimtar i Azure | Ekzekutoni `apply` sërish |
 | Faqja jep 403 "Site Disabled" | Kuota F1 mbaroi | Prisni deri nesër |

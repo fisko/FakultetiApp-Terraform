@@ -40,6 +40,16 @@ Bëjini në **hapi-6-state** (ose në kopje të hapi-5 për ato lokale). Çdo de
 13. **Mjedise.** Bëni që `plan_sku` të marrë `F1` te `dev.tfvars` dhe `B1` te `prod.tfvars` dhe ekzekutoni `terraform plan -var-file=prod.tfvars`. (Mos e zbatoni B1: kushton.)
 14. **Pull request me rishikim.** Punoni me një shok: ai hap PR në repon tuaj, ju rishikoni `plan`-in në Actions dhe e miratoni.
 
+## Niveli 4 — Hapi 7 (shih [dokumentin 11](11-hapi-7-avancuar.md))
+
+15. **Drift.** Ndryshoni një tag në Portal, bëni `plan`, pastaj `apply`. Shpjegoni çfarë pamë.
+16. **`for_each`.** Krijoni 3 blob containers me `for_each = toset(["imazhe","dokumente","kopje"])`.
+17. **Import.** Krijoni me `az` një storage account jashtë Terraform, shkruani bllokun `resource` dhe bëni `terraform import`. Pastaj `plan` duhet të jetë pa ndryshime.
+18. **State.** Provoni `terraform state list`, `state show <burimi>`, `state mv` (ndryshoni emrin lokal) dhe `state rm`.
+19. **Teste.** Shtoni një test të ri te `tests/themelore.tftest.hcl` (p.sh. SKU i Web App është `F1`).
+20. **Checkov.** Rregulloni 2 gjetje dhe provoni që `checkov` raporton më pak.
+21. **Lock.** Aktivizoni `mbro_nga_fshirja`, provoni `az group delete`, pastaj `terraform destroy`.
+
 ## Pyetje teorike
 
 1. Cili është ndryshimi mes `resource` dhe `data`?

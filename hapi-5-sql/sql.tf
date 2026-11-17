@@ -35,7 +35,7 @@ resource "azapi_resource" "db" {
   # body = JSON që dërgohet te Azure (këtu shkruhet si objekt HCL)
   body = {
     sku = {
-      name     = "GP_S_Gen5_2" # General Purpose, Serverless, Gen5, 2 vCore maksimum
+      name     = "GP_S_Gen5" # General Purpose, Serverless, Gen5 (vCore = capacity më poshtë)
       tier     = "GeneralPurpose"
       family   = "Gen5"
       capacity = 2
