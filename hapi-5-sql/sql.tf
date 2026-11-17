@@ -10,14 +10,15 @@ resource "random_password" "sql" {
   min_numeric = 2
 }
 
+# SQL Server = "kontejneri" logjik; bazat e të dhënave jetojnë brenda tij
 resource "azurerm_mssql_server" "sql" {
   name                         = "sql-tf-${var.emri}-${local.prapashtesa}"
   resource_group_name          = azurerm_resource_group.rg.name
   location                     = azurerm_resource_group.rg.location
-  version                      = "12.0"
+  version                      = "12.0" # kështu quhet versioni aktual i Azure SQL
   administrator_login          = "dbadmin"
   administrator_login_password = random_password.sql.result
-  minimum_tls_version          = "1.2"
+  minimum_tls_version          = "1.2" # refuzon lidhjet e vjetra e të pasigurta
   tags                         = local.tags
 }
 
@@ -25,29 +26,32 @@ resource "azurerm_mssql_server" "sql" {
 # Provider-i azurerm nuk e ka ende opsionin "useFreeLimit", prandaj përdorim azapi,
 # që flet drejtpërdrejt me API-n e Azure (Resource Manager) me çdo veti që ofron.
 resource "azapi_resource" "db" {
-  type      = "Microsoft.Sql/servers/databases@2023-08-01-preview"
+  type      = "Microsoft.Sql/servers/databases@2023-08-01-preview" # lloji + versioni i API-t
   name      = "db-${var.emri}"
-  parent_id = azurerm_mssql_server.sql.id
+  parent_id = azurerm_mssql_server.sql.id # baza është "fëmijë" i serverit
   location  = azurerm_resource_group.rg.location
   tags      = local.tags
 
+  # body = JSON që dërgohet te Azure (këtu shkruhet si objekt HCL)
   body = {
     sku = {
-      name     = "GP_S_Gen5_2"
+      name     = "GP_S_Gen5_2" # General Purpose, Serverless, Gen5, 2 vCore maksimum
       tier     = "GeneralPurpose"
       family   = "Gen5"
       capacity = 2
     }
     properties = {
-      autoPauseDelay              = 60
+      autoPauseDelay              = 60 # pauzohet pas 60 min pa përdorim (kursen kuotën)
       minCapacity                 = 0.5
       maxSizeBytes                = 34359738368 # 32 GB
-      useFreeLimit                = true
+      useFreeLimit                = true        # ky aktivizon offertën FALAS
       freeLimitExhaustionBehavior = "AutoPause" # kur mbaron kuota falas, baza pauzohet (pa faturë)
     }
   }
 }
-# Firewall: lejon shërbimet e Azure (App Service) të lidhen
+
+# Firewall: lejon shërbimet e Azure (App Service) të lidhen.
+# Adresa speciale 0.0.0.0 - 0.0.0.0 do të thotë "çdo shërbim i Azure", jo çdo IP.
 resource "azurerm_mssql_firewall_rule" "azure" {
   name             = "AllowAzureServices"
   server_id        = azurerm_mssql_server.sql.id
@@ -63,6 +67,7 @@ resource "azurerm_mssql_firewall_rule" "te_gjitha" {
   end_ip_address   = "255.255.255.255"
 }
 
+# Connection string ruhet në Key Vault; aplikacioni e lexon përmes referencës te app_settings (main.tf)
 resource "azurerm_key_vault_secret" "sql" {
   name         = "SqlConnection"
   value        = "Server=tcp:${azurerm_mssql_server.sql.fully_qualified_domain_name},1433;Database=${azapi_resource.db.name};User ID=dbadmin;Password=${random_password.sql.result};Encrypt=True;TrustServerCertificate=False;Connection Timeout=60;"

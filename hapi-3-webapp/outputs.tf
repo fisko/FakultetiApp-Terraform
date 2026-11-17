@@ -1,9 +1,13 @@
+# outputs.tf — vlerat që Terraform na i shfaq në fund të "apply" (ose me "terraform output").
+
 output "resource_group" {
-  value = azurerm_resource_group.rg.name
+  description = "Emri i grupit të krijuar"
+  value       = azurerm_resource_group.rg.name
 }
 
 output "storage_account" {
-  value = azurerm_storage_account.st.name
+  description = "Emri i Storage account"
+  value       = azurerm_storage_account.st.name
 }
 
 output "app_name" {

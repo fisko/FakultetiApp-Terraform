@@ -1,5 +1,6 @@
 # main.tf — Hapi 3: shtojmë App Service Plan (F1 falas) dhe Web App me Managed Identity.
 
+# random_string: gjenerohet NJË herë dhe ruhet në state; emrat në Azure duhet të jenë unikë në botë.
 resource "random_string" "suffix" {
   length  = 5
   lower   = true
@@ -8,6 +9,7 @@ resource "random_string" "suffix" {
   special = false
 }
 
+# locals: vlera të llogaritura që i ripërdorim; tags vihen në çdo burim
 locals {
   prapashtesa = random_string.suffix.result
   tags = {
@@ -17,12 +19,14 @@ locals {
   }
 }
 
+# Resource Group = "folderi" që mban burimet
 resource "azurerm_resource_group" "rg" {
   name     = "rg-tf-${var.emri}"
   location = var.location
   tags     = local.tags
 }
 
+# Storage account për blobs (LRS = kopja më e lirë)
 resource "azurerm_storage_account" "st" {
   name                     = "st${var.emri}${local.prapashtesa}"
   resource_group_name      = azurerm_resource_group.rg.name
@@ -32,6 +36,7 @@ resource "azurerm_storage_account" "st" {
   tags                     = local.tags
 }
 
+# Container privat për dokumentet
 resource "azurerm_storage_container" "dokumentet" {
   name                  = "dokumentet-${var.emri}"
   storage_account_id    = azurerm_storage_account.st.id
@@ -54,7 +59,7 @@ resource "azurerm_linux_web_app" "app" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   service_plan_id     = azurerm_service_plan.plan.id
-  https_only          = true
+  https_only          = true # HTTP ridrejtohet te HTTPS
   tags                = local.tags
 
   # Managed Identity: Azure i jep aplikacionit një identitet; me të lexon sekrete pa fjalëkalim
@@ -70,6 +75,7 @@ resource "azurerm_linux_web_app" "app" {
     }
   }
 
+  # app_settings bëhen variabla ambienti; "__" në .NET do të thotë ":"
   app_settings = {
     "Blob__Container" = azurerm_storage_container.dokumentet.name
   }
