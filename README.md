@@ -5,6 +5,8 @@ në **subscription-in tuaj**. Të njëjtën infrastrukturë (Web App, SQL falas,
 
 > Vetëm burime **falas** ose pothuajse falas. PostgreSQL nuk krijohet.
 
+![Arkitektura](docs/img/arhitektura-terraform.svg)
+
 ## Si ta ndiqni (rendi i leximit)
 
 | # | Dokumenti | Çfarë mësoni | Koha |
