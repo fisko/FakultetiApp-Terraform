@@ -8,6 +8,52 @@
                       └──► state (çfarë ka krijuar deri tani)
 ```
 
+![Si punon Terraform](img/terraform-arkitektura.svg)
+
+1. **Kodi (①)**: ju shkruani skedarët `.tf` dhe i ruani në Git.
+2. **Terraform CLI (②)**: `init` shkarkon providerat, `plan` krahason kodin me state dhe tregon diferencën, `apply` e zbaton, `destroy` e fshin.
+3. **State (③)**: kujtesa e Terraform; ruhet në Azure Storage.
+4. **Azure (④)**: provider-i `azurerm` flet me Azure Resource Manager, i cili krijon burimet.
+
+## Terraform kundrejt PowerShell / Azure CLI
+
+Të dyja krijojnë të njëjtat burime, por mënyra e punës ndryshon rrënjësisht.
+
+| | PowerShell / `az` CLI | Terraform |
+|---|---|---|
+| Stili | **Imperativ**: i tregoni *hapat* ("krijo këtë, pastaj këtë") | **Deklarativ**: përshkruani *gjendjen e dëshiruar* |
+| Ekzekutim i dytë | Gabim "ekziston" ose duplikim; duhet shkruar kontrolle `if` | Pa ndryshime; është **idempotent** |
+| Ndryshim i një vetie | Shkruani komandë të re `az ... update` | Ndryshoni vlerën në kod dhe bëni `apply` |
+| Para se të ndryshojë | S'ka pamje paraprake (veç `--dry-run` në disa komanda) | `terraform plan` tregon saktë `+ ~ -` |
+| Mban mend çfarë krijoi? | Jo; skripta s'di çfarë ekziston | Po, në **state** |
+| Varësitë (renditja) | I rendisni vetë | I llogarit vetë (graf, shih dok. 3) |
+| Fshirja | Shkruani skriptë të veçantë, burim pas burimi | `terraform destroy` fshin gjithçka që krijoi |
+| Drift (dikush ndryshoi në Portal) | I padukshëm | `plan` e zbulon |
+| Rishikimi në ekip | Skriptë e vështirë për t'u krahasuar | Kod në Git, `plan` në Pull Request |
+| Mësimi | I shpejtë, i mirë për një komandë të vetme | Kërkon konceptet (state, provider) |
+| Më i mirë për | Prova të shpejta, automatizime të vogla, demo | Infrastrukturë e përsëritshme dhe e mirëmbajtur |
+
+Shembull: i njëjti grup burimesh.
+
+```powershell
+# PowerShell / az: imperativ
+if (-not (az group exists -n rg-tf-ardian | ConvertFrom-Json)) {
+  az group create -n rg-tf-ardian -l swedencentral
+}
+az tag update --resource-id ... --operation merge --tags viti=2026
+```
+```hcl
+# Terraform: deklarativ
+resource "azurerm_resource_group" "rg" {
+  name     = "rg-tf-ardian"
+  location = "swedencentral"
+  tags     = { viti = "2026" }
+}
+```
+Terraform e krijon nëse mungon, e përditëson nëse ndryshon dhe s'bën asgjë nëse është gati.
+
+> Nuk është "ose/ose". Në Mësimin 2 e mësuam me `az` që të kuptojmë çfarë ndodh; me Terraform e bëjmë të përsëritshme.
+
 Shkruhet në gjuhën **HCL** (HashiCorp Configuration Language): e thjeshtë, si JSON i lexueshëm, me komente `#`.
 
 ## Konceptet bazë

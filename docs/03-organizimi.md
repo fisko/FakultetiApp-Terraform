@@ -76,13 +76,8 @@ projekt/
 
 ## Si e ndërton Terraform grafin (shembulli ynë)
 
-```text
-random_string ─┬─► storage_account ─► container
-               ├─► key_vault ─► role (ti) ─┐
-resource_group ┤                           ├─► time_sleep ─► secrets
-               ├─► service_plan ─► web_app ─► role (app) ─┘
-               └─► sql_server ─► sql_db / firewall
-```
-Shigjeta = "duhet krijuar para". Çka s'ka shigjetë mes tyre krijohet **njëkohësisht**.
+![Grafi i varësive](img/terraform-grafi.svg)
+
+Shigjeta = "duhet krijuar para". Çka s'ka shigjetë mes tyre krijohet **njëkohësisht** (brenda një vale). Gjatë `destroy` renditja është e kundërt.
 
 Vazhdoni: [4. Parakushtet](04-parakushtet.md)
